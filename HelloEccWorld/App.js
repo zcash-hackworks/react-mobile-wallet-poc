@@ -25,12 +25,22 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+const showLatestHeight = async () => {
+  NativeModules.ZcashReactSdk.getLatestHeight()
+    .then((response) =>
+      NativeModules.ZcashReactSdk.show('latest height: ' + response),
+    )
+    .catch((error) =>
+      NativeModules.ZcashReactSdk.show('failed due to' + error),
+    );
+};
+
 class App extends React.Component {
   constructor(props) {
     super(props);
   }
   componentDidMount() {
-    NativeModules.ZcashReactSdk.show('Hello ECC!');
+    showLatestHeight();
   }
   render() {
     return (

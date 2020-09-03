@@ -1,11 +1,12 @@
 buildscript {
     ext.androidConfig = [
-        'minSdkVersion': 16,
+        'minSdkVersion': 21,
         'compileSdkVersion': 29,
         'targetSdkVersion': 29
     ]
     ext.versions = [
-            'kotlin': '1.4.0'
+        'kotlin': '1.4.0',
+        'zcash': '1.1.0-beta04'
     ]
     repositories {
         google()
