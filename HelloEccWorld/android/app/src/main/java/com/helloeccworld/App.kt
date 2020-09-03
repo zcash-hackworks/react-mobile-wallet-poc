@@ -5,16 +5,16 @@ import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactNativeHost
 import com.facebook.soloader.SoLoader
+import com.helloeccworld.sdk.ZcashSdkModule
 
 class App : Application(), ReactApplication {
 
     private val mReactNativeHost: ReactNativeHost = object : ReactNativeHost(this) {
         override fun getUseDeveloperSupport() = BuildConfig.DEBUG
         override fun getJSMainModuleName() = "index"
-
-        // Packages that cannot be autolinked yet can be added manually here, for example:
-        // packages.add(new MyReactNativePackage());
-        override fun getPackages() = PackageList(this).packages
+        override fun getPackages() = PackageList(this).packages.apply {
+            add(ZcashSdkModule.Package)
+        }
     }
 
     override fun getReactNativeHost(): ReactNativeHost? {
