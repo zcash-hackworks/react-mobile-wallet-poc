@@ -6,7 +6,11 @@ buildscript {
     ]
     ext.versions = [
         'kotlin': '1.4.0',
-        'zcash': '1.1.0-beta04'
+        'zcash': '1.1.0-beta05',
+        'android': [
+            'room': '2.2.5',
+            'paging': '2.1.2'
+        ]
     ]
     repositories {
         google()

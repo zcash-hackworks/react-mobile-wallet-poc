@@ -1,6 +1,8 @@
 package com.helloeccworld
 
 import android.app.Application
+import cash.z.ecc.android.sdk.ext.TroubleshootingTwig
+import cash.z.ecc.android.sdk.ext.Twig
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactNativeHost
@@ -24,5 +26,6 @@ class App : Application(), ReactApplication {
     override fun onCreate() {
         super.onCreate()
         SoLoader.init(this, false)
+        Twig.plant(TroubleshootingTwig())
     }
 }

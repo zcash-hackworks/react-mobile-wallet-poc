@@ -8,6 +8,7 @@
 
 import React from 'react';
 import {
+  NativeEventEmitter,
   NativeModules,
   SafeAreaView,
   StyleSheet,
@@ -15,6 +16,8 @@ import {
   View,
   Text,
   StatusBar,
+  Button,
+  Alert,
 } from 'react-native';
 
 import {
@@ -25,20 +28,74 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import * as Progress from 'react-native-progress';
+
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      latestHeight: 'loading...',
+      isStarted: false,
+      isDownloading: false,
+      latestHeight: 'awaiting start...',
+      totalBalance: '0',
+      statusMessage: '',
+      status: '',
+      progress: 0,
     };
   }
 
+  handleClick = () => {
+    NativeModules.ZcashReactSdk.start();
+    this.setState({isStarted: true, latestHeight: 'syncing...'});
+  };
+
   componentDidMount() {
-    NativeModules.ZcashReactSdk.getLatestHeight()
-      .then((response) => this.setState({latestHeight: response}))
+    NativeModules.ZcashReactSdk.initialize(
+      'zxviews1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkysswfhjk79n8l99f2grd26dqg6dy3jcmxsaypxfsu6ara6vsk3x8l544uaksstx9zre879mdg7s9a7zurrx6pf5qg2n323js2s3zlu8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszcq7kwxy',
+      921100,
+    )
+      .then((response) => this.setState({status: 'initialized'}))
       .catch((error) =>
-        NativeModules.ZcashReactSdk.show('failed due to' + error),
+        NativeModules.ZcashReactSdk.show('Warning: Already initialized.'),
       );
+
+    const eventEmitter = new NativeEventEmitter(NativeModules.ZcashReactSdk);
+    this.updateListener = eventEmitter.addListener('UpdateEvent', (event) => {
+      let message;
+      if (event.isDownloading) {
+        message = `Downloading block ${event.lastDownloadedHeight}`;
+      } else if (event.isScanning) {
+        message = `Scanning block ${event.lastScannedHeight}`;
+      } else {
+        if (this.state.totalBalance === '0') {
+          message = 'balance: refreshing...';
+        } else {
+          message = `balance: ${this.state.totalBalance} ZEC`;
+        }
+      }
+
+      this.setState({
+        statusMessage: `${message}\n\n`,
+        progress: event.scanProgress,
+        isDownloading: event.isDownloading,
+        latestHeight:
+          event.networkBlockHeight > 0
+            ? event.networkBlockHeight
+            : 'loading...',
+      });
+    });
+    this.statusListener = eventEmitter.addListener('StatusEvent', (event) => {
+      this.setState({status: event.name});
+    });
+    this.balanceListener = eventEmitter.addListener('BalanceEvent', (event) => {
+      this.setState({totalBalance: event.total});
+    });
+  }
+
+  componentWillUnmount() {
+    this.updateListener.remove();
+    this.statusListener.remove();
+    this.balanceListener.remove();
   }
   render() {
     return (
@@ -62,12 +119,26 @@ class App extends React.Component {
                 </Text>
               </View>
               <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Learn More</Text>
-                <Text style={styles.sectionDescription}>
-                  Read the docs to discover what to do next:
+                <Text style={styles.sectionTitle}>
+                  Status: {this.state.status}
                 </Text>
+                <Text style={styles.sectionDescription}>
+                  {this.state.statusMessage}
+                </Text>
+                <View style={styles.progressView}>
+                  {this.state.isStarted && (
+                    <Progress.Circle
+                      size={100}
+                      showsText={true}
+                      indeterminate={this.state.isDownloading}
+                      progress={this.state.progress / 100.0}
+                    />
+                  )}
+                </View>
+                {!this.state.isStarted && (
+                  <Button title="start" onPress={this.handleClick} />
+                )}
               </View>
-              <LearnMoreLinks />
             </View>
           </ScrollView>
         </SafeAreaView>
@@ -112,6 +183,11 @@ const styles = StyleSheet.create({
     padding: 4,
     paddingRight: 12,
     textAlign: 'right',
+  },
+  progressView: {
+    paddingBottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
