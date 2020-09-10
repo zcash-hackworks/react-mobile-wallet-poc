@@ -1,8 +1,8 @@
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
-platform :ios, '10.0'
-
+platform :ios, '13.0'
+use_frameworks!
 target 'HelloEccWorld' do
   config = use_native_modules!
 
@@ -11,7 +11,9 @@ target 'HelloEccWorld' do
   target 'HelloEccWorldTests' do
     inherit! :complete
     # Pods for testing
+
   end
+  pod 'ZcashLightClientKit', :git => 'https://github.com/zcash/ZcashLightClientKit.git', :branch => 'master'
 
   # Enables Flipper.
   #
@@ -20,14 +22,82 @@ target 'HelloEccWorld' do
   use_flipper!
   post_install do |installer|
     flipper_post_install(installer)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+  
+  
+        if target.name == 'ZcashLightClientKit'
+           config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
+        end
+        config.build_settings['ENABLE_BITCODE'] = 'NO'
+      end
+    end
   end
 end
 
-target 'HelloEccWorld-tvOS' do
-  # Pods for HelloEccWorld-tvOS
 
-  target 'HelloEccWorld-tvOSTests' do
-    inherit! :search_paths
-    # Pods for testing
+$static_framework =  [
+                      'boost-for-react-native',
+                      'CocoaAsyncSocket', 
+                      'ComponentKit', 
+                      'CocoaLibEvent',
+                      'DoubleConversion',
+                      'FBLazyVector',
+                      'FBReactNativeSpec',
+                      'FlipperKit', 
+                      'Flipper', 
+                      'Flipper-Folly', 
+                      'Folly',
+                      'Flipper-Glog',
+                      'Flipper-PeerTalk', 
+                      'Flipper-RSocket', 
+                      'glog',
+                      'openssl-ios-bitcode', 
+                      'React', 
+                      'React-Core', 
+                      'React-CoreModules', 
+                      'React-RCTActionSheet', 
+                      'React-RCTAnimation', 
+                      'React-RCTBlob', 
+                      'React-RCTImage', 
+                      'React-RCTLinking', 
+                      'React-RCTNetwork', 
+                      'React-RCTSettings', 
+                      'React-RCTText', 
+                      'React-RCTVibration', 
+                      'React-callinvoker', 
+                      'React-cxxreact', 
+                      'React-jsi', 
+                      'React-jsiexecutor', 
+                      'React-jsinspector', 
+                      'ReactCommon', 
+                      'RCTRequired',
+                      'RCTTypeSafety',
+                      
+                      'ReactNativeART',
+                      'Yoga',
+                      'YogaKit'
+                      ]
+
+  pre_install do |installer|
+    Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
+    installer.pod_targets.each do |pod|
+        if $static_framework.include?(pod.name)
+          def pod.build_type;
+            Pod::BuildType.static_library
+          end
+        end
+      end
   end
-end
+# target 'HelloEccWorld-tvOS' do
+#   # Pods for HelloEccWorld-tvOS
+
+#   target 'HelloEccWorld-tvOSTests' do
+#     inherit! :search_paths
+#     # Pods for testing
+#   end
+# end
+
+
+
+
